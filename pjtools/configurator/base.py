@@ -118,9 +118,25 @@ class BaseConfigurator:
             if key not in self.__dict__:
                 self.__dict__[key] = value
             else:
-                if isinstance(self.__dict__[key],
-                              BaseConfigurator) and isinstance(
-                                  value, BaseConfigurator):
+                # if both values are dictionaries, deep merge them
+                if isinstance(self.__dict__[key], dict) and isinstance(
+                        value, dict):
+                    self.__dict__[key].update(value)
+                # if both values are BaseConfigurator, recursively merge them
+                elif isinstance(self.__dict__[key],
+                                BaseConfigurator) and isinstance(
+                                    value, BaseConfigurator):
                     self.__dict__[key].merge(value)
                 else:
+                    # otherwise, just overwrite the value
                     self.__dict__[key] = value
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert the configuration to a dictionary."""
+        result = {}
+        for key, value in self.__dict__.items():
+            if isinstance(value, BaseConfigurator):
+                result[key] = value.to_dict()
+            else:
+                result[key] = value
+        return result
