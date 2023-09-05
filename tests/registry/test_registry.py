@@ -1,26 +1,26 @@
-import pytest
+import unittest
 
 from pjtools.registry import Registry
 
 
-def test_registry_basic_functionality():
+class TestRegistry(unittest.TestCase):
 
-    reg = Registry('TestRegistry')
+    def test_registry_basic_functionality(self):
+        reg = Registry('TestRegistry')
 
-    class ExampleModule:
-        pass
+        class ExampleModule:
+            pass
 
-    reg.register('example', ExampleModule)
-    assert 'example' in reg
-    assert reg.get('example') is ExampleModule
-
-    with pytest.raises(KeyError):
-        reg.get('none_existent_module')
-
-    with pytest.raises(ValueError):
         reg.register('example', ExampleModule)
+        self.assertIn('example', reg)
+        self.assertIs(reg.get('example'), ExampleModule)
 
+        with self.assertRaises(KeyError):
+            reg.get('none_existent_module')
 
-def test_registry_category():
-    reg = Registry('Backbone')
-    assert repr(reg).startswith('Backbone: ')
+        with self.assertRaises(ValueError):
+            reg.register('example', ExampleModule)
+
+    def test_registry_category(self):
+        reg = Registry('Backbone')
+        self.assertTrue(repr(reg).startswith('Backbone: '))
