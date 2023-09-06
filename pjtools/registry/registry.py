@@ -1,4 +1,6 @@
-from typing import Any, Type, Union
+from typing import Any, Callable, Optional, Type, TypeVar, Union
+
+T = TypeVar('T')
 
 
 class Registry:
@@ -18,20 +20,39 @@ class Registry:
         self._category = category
         self._modules = {}
 
-    def register(self, name: str, module: Type[Any]) -> None:
+    def register(self,
+                 name: Optional[str] = None) -> Callable[[Type[T]], Type[T]]:
         """Register a module with a given name.
 
-        Args:
-            name (str): The name to register the module under.
-            module (Type[Any]): The actual module/class to be registered.
+        This method can be used as a decorator.
 
-        Raises:
-            ValueError: If the module name is already registered.
+        Args:
+            name (Optional[str]): The name to register the module under.
+                If None, use the name of the module to be registered.
+
+        Returns:
+            Callable[[Type[T]], Type[T]]: A decorator for registering the
+                module.
+
+        Examples:
+            >>> @registry.register('example')
+            ... class ExampleModule:
+            ...     pass
+
+            >>> registry.register('example', ExampleModule)
         """
-        if name in self._modules:
-            raise ValueError(f'Module {name} already registered in '
-                             ' {self._category}.')
-        self._modules[name] = module
+
+        def _register(module: Type[T]) -> Type[T]:
+            _name = name
+            if _name is None:
+                _name = module.__name__
+            if _name in self._modules:
+                raise ValueError(
+                    f'Module {_name} already registered in {self._category}.')
+            self._modules[_name] = module
+            return module
+
+        return _register
 
     def get(self, name: str) -> Union[Type[Any], None]:
         """Retrieve a module based on its registered name.

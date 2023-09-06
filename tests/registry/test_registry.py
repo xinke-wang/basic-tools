@@ -8,10 +8,10 @@ class TestRegistry(unittest.TestCase):
     def test_registry_basic_functionality(self):
         reg = Registry('TestRegistry')
 
+        @reg.register('example')
         class ExampleModule:
             pass
 
-        reg.register('example', ExampleModule)
         self.assertIn('example', reg)
         self.assertIs(reg.get('example'), ExampleModule)
 
@@ -19,7 +19,7 @@ class TestRegistry(unittest.TestCase):
             reg.get('none_existent_module')
 
         with self.assertRaises(ValueError):
-            reg.register('example', ExampleModule)
+            reg.register('example')(ExampleModule)
 
     def test_registry_category(self):
         reg = Registry('Backbone')
