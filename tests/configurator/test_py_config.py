@@ -1,7 +1,7 @@
 import tempfile
 import unittest
 
-from pjtools.configurator import PyConfigurator
+from pjtools.configurator.configurator import PyConfigurator
 
 
 class TestPyConfigurator(unittest.TestCase):

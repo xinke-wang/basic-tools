@@ -1,4 +1,3 @@
-from .base import BaseConfigurator
-from .py_config import PyConfigurator
+from .configurator import AutoConfigurator
 
-__all__ = ['BaseConfigurator', 'PyConfigurator']
+__all__ = ['AutoConfigurator']

@@ -1,0 +1,15 @@
+{
+    "database": {
+        "host": "localhost",
+        "port": 5432,
+        "user": "root",
+        "password": "password"
+    },
+    "api": {
+        "version": "v1",
+        "endpoint": "/api/"
+    },
+    "logging": {
+        "level": "INFO"
+    }
+}

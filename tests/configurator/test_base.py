@@ -1,6 +1,6 @@
 import unittest
 
-from pjtools.configurator import BaseConfigurator
+from pjtools.configurator.base import BaseConfigurator
 
 
 class TestBaseConfigurator(unittest.TestCase):
