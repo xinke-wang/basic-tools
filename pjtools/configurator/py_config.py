@@ -1,6 +1,6 @@
 import importlib.util
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional
 
 from pjtools.configurator import BaseConfigurator
 
@@ -8,18 +8,44 @@ from pjtools.configurator import BaseConfigurator
 class PyConfigurator(BaseConfigurator):
     """Configuration class for reading Python-based configuration files.
 
+    This class provides methods for loading and merging configurations
+    from Python files.
+
+    Attributes:
+        _base_ (Optional[List[str]]): A list of base configuration files to
+            merge from.
+
     Example:
         config = PyConfigurator.fromfile("config.py")
         print(config.some_attribute)
     """
 
-    def __init__(self, config_dict=None, base_files=None):
+    def __init__(self,
+                 config_dict: Optional[Dict[str, Any]] = None,
+                 base_files: Optional[List[str]] = None) -> None:
+        """Initialize the PyConfigurator object.
+
+        Args:
+            config_dict (Optional[Dict[str, Any]]): Dictionary containing
+                configuration attributes.
+            base_files (Optional[List[str]]): List of filenames of the base
+                configuration files.
+        """
         super().__init__(config_dict)
         if base_files:
             self._base_ = base_files
 
     @classmethod
-    def fromfile(cls, filename):
+    def fromfile(cls, filename: str) -> 'PyConfigurator':
+        """Load a configuration from a Python file.
+
+        Args:
+            filename (str): The filename of the Python configuration file.
+
+        Returns:
+            PyConfigurator: A PyConfigurator object with the loaded
+                configuration.
+        """
         config_dict, base_files = cls._load_python_config(filename)
 
         if base_files is None:
@@ -42,6 +68,18 @@ class PyConfigurator(BaseConfigurator):
 
     @staticmethod
     def _load_python_config(filename: str) -> Dict[str, Any]:
+        """Load a Python configuration file.
+
+        Args:
+            filename (str): The filename of the Python configuration file.
+
+        Returns:
+            Dict[str, Any]: A dictionary containing the attributes from the
+                loaded Python file.
+
+        Raises:
+            FileNotFoundError: If the specified file does not exist.
+        """
         filepath = Path(filename).resolve()
         if not filepath.exists():
             raise FileNotFoundError(f'File {filename} does not exist')
@@ -50,7 +88,7 @@ class PyConfigurator(BaseConfigurator):
         spec = importlib.util.spec_from_file_location(module_name, filepath)
         config_module = importlib.util.module_from_spec(spec)
 
-        spec.loader.exec_module(config_module)  # type: ignore
+        spec.loader.exec_module(config_module)
 
         base_files = getattr(config_module, '_base_', None)
 
