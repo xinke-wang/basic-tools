@@ -1,5 +1,7 @@
 from typing import Any, Dict, Type, Union
 
+from .dumper import DUMPER_REGISTRY
+
 
 class BaseConfigurator:
     """Base class for configuration objects.
@@ -94,19 +96,20 @@ class BaseConfigurator:
         """
         raise NotImplementedError
 
-    def dumpfile(self, filename: str) -> None:
-        """Dump the configuration to a file.
-
-        This is a placeholder method that should be implemented in subclasses.
+    def dumpfile(self, filename: str, format: str = 'py') -> None:
+        """Dump the configuration to a file in the specified format.
 
         Args:
             filename: Name of the output file.
-
-        Raises:
-            NotImplementedError: This method should be implemented by
-                subclasses.
+            format: The format to save the file in.
         """
-        raise NotImplementedError
+        data = self.to_dict()
+        dumper = DUMPER_REGISTRY.get(format)
+
+        if dumper is None:
+            raise ValueError(f'Unsupported format: {format}')
+
+        dumper(data, filename)
 
     def merge(self, other_config: 'BaseConfigurator') -> None:
         """Merge another configuration object into this one.
@@ -115,21 +118,19 @@ class BaseConfigurator:
             other_config: Another configuration object.
         """
         for key, value in other_config.__dict__.items():
-            if key not in self.__dict__:
-                self.__dict__[key] = value
-            else:
-                # if both values are dictionaries, deep merge them
-                if isinstance(self.__dict__[key], dict) and isinstance(
-                        value, dict):
-                    self.__dict__[key].update(value)
-                # if both values are BaseConfigurator, recursively merge them
-                elif isinstance(self.__dict__[key],
-                                BaseConfigurator) and isinstance(
-                                    value, BaseConfigurator):
-                    self.__dict__[key].merge(value)
-                else:
-                    # otherwise, just overwrite the value
+            if value is not None:
+                if key not in self.__dict__:
                     self.__dict__[key] = value
+                else:
+                    if isinstance(self.__dict__[key], dict) and isinstance(
+                            value, dict):
+                        self.__dict__[key].update(value)
+                    elif isinstance(self.__dict__[key],
+                                    BaseConfigurator) and isinstance(
+                                        value, BaseConfigurator):
+                        self.__dict__[key].merge(value)
+                    else:
+                        self.__dict__[key] = value
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert the configuration to a dictionary."""
@@ -140,3 +141,16 @@ class BaseConfigurator:
             else:
                 result[key] = value
         return result
+
+    def print(self, indent: int = 0) -> None:
+        """Print the configuration.
+
+        Args:
+            indent: The number of spaces to use for indentation.
+        """
+        for key, value in self.__dict__.items():
+            if isinstance(value, BaseConfigurator):
+                print(' ' * indent + f'{key}:')
+                value.print(indent + 4)
+            else:
+                print(' ' * indent + f'{key}: {value}')
