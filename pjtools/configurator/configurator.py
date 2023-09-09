@@ -20,18 +20,22 @@ class JSONConfigurator(BaseConfigurator):
     """
 
     @classmethod
-    def fromfile(cls, filename: str) -> 'JSONConfigurator':
+    def fromfile(cls,
+                 filename: str,
+                 singleton: bool = False) -> 'JSONConfigurator':
         """Create a JSONConfigurator instance from a JSON file.
 
         Args:
             filename (str): The name of the JSON file to read.
+            singleton (bool, optional): Whether to create a singleton instance.
+                Defaults to False.
 
         Returns:
             JSONConfigurator: An instance of JSONConfigurator initialized with
                 data from the JSON file.
         """
         config_dict = cls._load_json_config(filename)
-        return cls(config_dict)
+        return cls(config_dict, singleton=singleton)
 
     @staticmethod
     def _load_json_config(filename: str) -> Dict[str, Any]:
@@ -71,25 +75,33 @@ class PyConfigurator(BaseConfigurator):
 
     def __init__(self,
                  config_dict: Optional[Dict[str, Any]] = None,
-                 base_files: Optional[List[str]] = None) -> None:
-        """Initialize the PyConfigurator object.
+                 base_files: Optional[List[str]] = None,
+                 singleton: bool = False) -> None:
+        """
+        Initialize the PyConfigurator object.
 
         Args:
             config_dict (Optional[Dict[str, Any]]): Dictionary containing
-                configuration attributes.
+                configuration attributes. Defaults to None.
             base_files (Optional[List[str]]): List of filenames of the base
-                configuration files.
+                configuration files to merge from. Defaults to None.
+            singleton (bool, optional): Whether to create a singleton instance.
+                Defaults to False.
         """
-        super().__init__(config_dict)
+        super().__init__(config_dict, singleton=singleton)
         if base_files:
             self._base_ = base_files
 
     @classmethod
-    def fromfile(cls, filename: str) -> 'PyConfigurator':
+    def fromfile(cls,
+                 filename: str,
+                 singleton: bool = False) -> 'PyConfigurator':
         """Load a configuration from a Python file.
 
         Args:
             filename (str): The filename of the Python configuration file.
+            singleton (bool, optional): Whether to create a singleton instance.
+                Defaults to False.
 
         Returns:
             PyConfigurator: A PyConfigurator object with the loaded
@@ -103,14 +115,14 @@ class PyConfigurator(BaseConfigurator):
         if not isinstance(base_files, list):
             base_files = [base_files]
 
-        base_config = cls()
+        base_config = cls(singleton=singleton)
         for base_file in base_files:
             if base_file is not None:
-                base_config.merge(cls.fromfile(base_file))
+                base_config.merge(cls.fromfile(base_file, singleton=singleton))
             else:
                 raise ValueError('Invalid base_file: None')
 
-        current_config = cls(config_dict)
+        current_config = cls(config_dict, singleton=singleton)
         base_config.merge(current_config)
 
         return base_config
@@ -161,18 +173,22 @@ class YAMLConfigurator(BaseConfigurator):
     """
 
     @classmethod
-    def fromfile(cls, filename: str) -> 'YAMLConfigurator':
+    def fromfile(cls,
+                 filename: str,
+                 singleton: bool = False) -> 'YAMLConfigurator':
         """Create a YAMLConfigurator instance from a YAML file.
 
         Args:
             filename (str): The name of the YAML file to read.
+            singleton (bool, optional): Whether to create a singleton instance.
+                Defaults to False.
 
         Returns:
             YAMLConfigurator: An instance of YAMLConfigurator initialized with
                 data from the YAML file.
         """
         config_dict = cls._load_yaml_config(filename)
-        return cls(config_dict)
+        return cls(config_dict, singleton=singleton)
 
     @staticmethod
     def _load_yaml_config(filename: str) -> Dict[str, Any]:
@@ -204,12 +220,16 @@ class AutoConfigurator(BaseConfigurator):
     }
 
     @classmethod
-    def fromfile(cls, filename: str) -> 'BaseConfigurator':
+    def fromfile(cls,
+                 filename: str,
+                 singleton: bool = False) -> 'BaseConfigurator':
         """Determine which configurator to use based on the file extension and
         load the file.
 
         Args:
             filename (str): The name of the file to read.
+            singleton (bool, optional): Whether to create a singleton instance.
+                Defaults to False.
 
         Returns:
             BaseConfigurator: An instance of the appropriate configurator class
@@ -219,10 +239,10 @@ class AutoConfigurator(BaseConfigurator):
         file_extension = Path(filename).suffix[1:]
 
         # Look up the correct configurator class in the registry
-        configurator_class = CONFIGURATOR_REGISTRY.get(file_extension)
+        configurator_class = cls.CONFIGURATOR_REGISTRY.get(file_extension)
 
         if configurator_class is None:
             raise ValueError(f"Unsupported file extension '{file_extension}'")
 
         # Load the configuration using the selected configurator class
-        return configurator_class.fromfile(filename)
+        return configurator_class.fromfile(filename, singleton=singleton)
