@@ -8,22 +8,91 @@ class BaseConfigurator:
 
     Attributes can be accessed either as dict keys or as object attributes.
 
-    Example:
-        config = BaseConfigurator({"attr1": 1, "attr2": "string"})
-        print(config.attr1)  # Output: 1
-        print(config["attr2"])  # Output: "string"
+    Examples:
+        >>> config = BaseConfigurator({"attr1": 1, "attr2": "string"})
+        >>> print(config.attr1)
+        1
+        >>> print(config["attr2"])
+        "string"
     """
+    _singleton_instance = None
+
+    def __new__(cls,
+                *args,
+                singleton: bool = False,
+                **kwargs) -> 'BaseConfigurator':
+        """
+        Create a new instance or return the existing singleton instance.
+
+        Args:
+            singleton (bool): If True, a singleton instance will be
+                created/used.
+
+        Returns:
+            BaseConfigurator: A new or existing singleton instance of the
+                class.
+        """
+        if singleton:
+            if not cls._singleton_instance:
+                cls._singleton_instance = super(BaseConfigurator,
+                                                cls).__new__(cls)
+            return cls._singleton_instance
+        else:
+            return super(BaseConfigurator, cls).__new__(cls)
 
     def __init__(self,
-                 config_dict: Union[Dict[str, Any], None] = None) -> None:
+                 config_dict: Union[Dict[str, Any], None] = None,
+                 singleton: bool = False) -> None:
         """Initialize a new configuration object.
 
         Args:
-            config_dict: Optional dictionary containing initial configuration
-                keys and values.
+            config_dict (Union[Dict[str, Any], None]): Optional dictionary
+                containing initial configuration keys and values.
+            singleton (bool): If True, singleton instance behavior is enabled.
         """
+        if singleton \
+            and BaseConfigurator._singleton_instance \
+                and BaseConfigurator._singleton_instance._is_initialized:
+            self._merge_from_dict(config_dict)
+            return
+
         if config_dict:
             self._load_from_dict(config_dict)
+
+        self._is_initialized = True
+
+    def _is_initialized(self) -> bool:
+        """
+        Check if the object is initialized.
+
+        Returns:
+            bool: True if initialized, otherwise False.
+        """
+        return getattr(self, '_initialized', False)
+
+    @classmethod
+    def reset_singleton_instance(cls) -> None:
+        """
+        Reset the singleton instance to None, effectively deleting the
+            singleton instance.
+        """
+        cls._singleton_instance = None
+        if cls._singleton_instance:
+            cls._singleton_instance._is_initialized = False
+
+    def _merge_from_dict(self, config_dict: Dict[str, Any]) -> None:
+        if not config_dict:
+            return
+
+        for key, value in config_dict.items():
+            if isinstance(value, dict):
+                if key in self.__dict__ and isinstance(self.__dict__[key],
+                                                       BaseConfigurator):
+                    self.__dict__[key]._merge_from_dict(value)
+                else:
+                    self.__dict__[key] = BaseConfigurator(value)
+            else:
+                self.__dict__[key] = value
 
     def _load_from_dict(self, config_dict: Dict[str, Any]) -> None:
         """Load attributes from a dictionary.
@@ -136,6 +205,8 @@ class BaseConfigurator:
         """Convert the configuration to a dictionary."""
         result = {}
         for key, value in self.__dict__.items():
+            if key == '_is_initialized':
+                continue
             if isinstance(value, BaseConfigurator):
                 result[key] = value.to_dict()
             else:

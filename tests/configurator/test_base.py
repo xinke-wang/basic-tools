@@ -64,3 +64,25 @@ class TestBaseConfigurator(unittest.TestCase):
         config = BaseConfigurator()
         config.attr1 = 1
         self.assertEqual(config['attr1'], 1)
+
+    def test_singleton_instance(self):
+        config1 = BaseConfigurator({'a': 1}, singleton=True)
+        config2 = BaseConfigurator({'b': 2}, singleton=True)
+
+        self.assertIs(config1, config2)
+        self.assertEqual(config1.b, 2)
+
+    def test_non_singleton_instance(self):
+        config1 = BaseConfigurator({'a': 1})
+        config2 = BaseConfigurator({'b': 2})
+        self.assertIsNot(config1, config2)
+        self.assertIsNone(config1.__dict__.get('b'))
+
+    def test_mixed_singleton_and_non_singleton_instances(self):
+        config1 = BaseConfigurator({'a': 1}, singleton=True)
+        config2 = BaseConfigurator({'b': 2}, singleton=False)
+        config3 = BaseConfigurator({'c': 3}, singleton=True)
+
+        self.assertIsNot(config1, config2)
+        self.assertIs(config1, config3)
+        self.assertEqual(config1.c, 3)
