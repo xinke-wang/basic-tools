@@ -10,7 +10,7 @@ class TestSQLiteDatabase(unittest.TestCase):
 
     def setUp(self):
         cfg_path = 'tests/data/dummy_sqlite_config.py'
-        self.db_cfg = AutoConfigurator.fromfile(cfg_path).to_dict()
+        self.db_cfg = AutoConfigurator.fromfile(cfg_path).to_dict()['database']
 
     def test_init(self):
         db = SQLiteDatabase(self.db_cfg)
