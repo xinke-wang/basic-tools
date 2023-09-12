@@ -1,5 +1,4 @@
 database = dict(
-    type='sqlite',
+    type='unknown',
     path=':memory:',
-    timeout=5.0,
 )
