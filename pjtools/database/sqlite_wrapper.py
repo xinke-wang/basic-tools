@@ -93,8 +93,9 @@ class SQLiteDatabase(BaseDatabase):
             self.rollback()
 
     def create_table(
-            self, table_name: str,
-            schema: Dict[str, Union[type, str, Tuple[type, str]]]) -> None:
+        self, table_name: str,
+        schema: Dict[str, Union[type, str, Tuple[type,
+                                                 str]]]) -> sqlite3.Cursor:
         """
         Create a new table with the specified schema.
 
