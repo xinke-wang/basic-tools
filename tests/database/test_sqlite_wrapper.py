@@ -29,7 +29,12 @@ class TestSQLiteDatabase(unittest.TestCase):
 
     def test_create_table(self):
         db = SQLiteDatabase(self.db_cfg)
-        schema = {'name': str, 'age': 'INTEGER', 'height': float}
+        schema = {
+            'id': (int, 'PRIMARY KEY'),
+            'name': str,
+            'age': 'INTEGER',
+            'height': float
+        }
         db.create_table('people', schema)
 
         cursor = db.connection.cursor()
@@ -38,9 +43,10 @@ class TestSQLiteDatabase(unittest.TestCase):
         result_as_tuples = [tuple(row) for row in result]
 
         expected_schema = [
-            (0, 'name', 'TEXT', 0, None, 0),
-            (1, 'age', 'INTEGER', 0, None, 0),
-            (2, 'height', 'REAL', 0, None, 0),
+            (0, 'id', 'INTEGER', 0, None, 1),
+            (1, 'name', 'TEXT', 0, None, 0),
+            (2, 'age', 'INTEGER', 0, None, 0),
+            (3, 'height', 'REAL', 0, None, 0),
         ]
 
         self.assertEqual(result_as_tuples, expected_schema)

@@ -92,31 +92,42 @@ class SQLiteDatabase(BaseDatabase):
             print(f'An error occurred while executing the query: {e}')
             self.rollback()
 
-    def create_table(self, table_name: str,
-                     schema: Dict[str, Union[type, str]]) -> sqlite3.Cursor:
+    def create_table(
+        self, table_name: str,
+        schema: Dict[str, Union[type, str, Tuple[type,
+                                                 str]]]) -> sqlite3.Cursor:
         """
         Create a new table with the specified schema.
 
         Args:
             table_name (str): The name of the table to be created.
-            schema (Dict[str, Union[type, str]]): A dictionary where the keys
-                are column names and the values are Python types or SQLite data
-                types.
+            schema (Dict[str, Union[type, str, Tuple[type, str]]): A
+                dictionary where the keys are column names and the values are
+                Python types or SQLite data types, optionally followed by a
+                string representing additional column constraints.
 
         Examples:
-            >>> db = SQLiteDatabase('path/to/database.db')
-            >>> db.connect()
-            >>> db.create_table('users', {'name': str, 'age': int})
+            >>> db = SQLiteDatabase({'path': ':memory:', 'timeout': 5})
+            >>> db.create_table('users', {'id': (int, 'PRIMARY KEY'),
+                                          'name': str, 'age': int})
         """
         columns = []
 
         for name, dtype in schema.items():
-            if isinstance(dtype, type):
+            if isinstance(dtype, tuple):
+                python_dtype, extra_info = dtype
+                sqlite_dtype = self.PYTHON_SQLITE_TYPE_MAP.get(
+                    python_dtype, 'TEXT')
+                column_definition = f'{name} {sqlite_dtype} {extra_info}'
+            elif isinstance(dtype, type):
                 sqlite_dtype = self.PYTHON_SQLITE_TYPE_MAP.get(dtype, 'TEXT')
+                column_definition = f'{name} {sqlite_dtype}'
             else:
                 sqlite_dtype = dtype.upper() if dtype.upper(
                 ) in self.SQLITE_VALID_TYPES else 'TEXT'
-            columns.append(f'{name} {sqlite_dtype}')
+                column_definition = f'{name} {sqlite_dtype}'
+
+            columns.append(column_definition)
 
         columns_str = ', '.join(columns)
         query = f'CREATE TABLE IF NOT EXISTS {table_name} ({columns_str})'
