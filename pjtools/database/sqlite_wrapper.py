@@ -1,3 +1,5 @@
+import os
+import os.path as osp
 import sqlite3
 from typing import Any, Dict, List, Tuple, Union
 
@@ -24,6 +26,9 @@ class SQLiteDatabase(BaseDatabase):
             db_cfg: A dictionary containing database configuration parameters.
         """
         self.db_path = db_cfg['path']
+        if self.db_path != ':memory:' and not osp.exists(
+                osp.dirname(self.db_path)):
+            os.makedirs(osp.dirname(self.db_path))
         self.timeout = db_cfg['timeout']
         self.connection = None
         self.connect()
