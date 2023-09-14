@@ -29,15 +29,18 @@ class SQLiteDatabase(BaseDatabase):
         if self.db_path != ':memory:' and not osp.exists(
                 osp.dirname(self.db_path)):
             os.makedirs(osp.dirname(self.db_path))
-        self.timeout = db_cfg['timeout']
+        self.timeout = getattr(db_cfg, 'timeout', 5)
+        self.check_same_thread = getattr(db_cfg, 'check_same_thread', False)
         self.connection = None
         self.connect()
 
     def connect(self) -> None:
         """Establish a connection to the database."""
         try:
-            self.connection = sqlite3.connect(self.db_path,
-                                              timeout=self.timeout)
+            self.connection = sqlite3.connect(
+                self.db_path,
+                timeout=self.timeout,
+                check_same_thread=self.check_same_thread)
             self.connection.row_factory = sqlite3.Row
         except sqlite3.Error as e:
             print(f'An error occurred while connecting to the database: {e}')
