@@ -18,3 +18,5 @@ data_transforms = {
 }
 
 additional_info = 'This is a dummy config'
+
+database_url = 'env:PJTOOLS_DUMMY_TEST_DATABASE_URL'

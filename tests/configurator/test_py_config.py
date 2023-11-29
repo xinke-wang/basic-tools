@@ -1,3 +1,4 @@
+import os
 import tempfile
 import unittest
 
@@ -58,3 +59,11 @@ class TestPyConfigurator(unittest.TestCase):
 
             self.assertEqual(loaded_config.to_dict(),
                              self.default_config.to_dict())
+
+    def test_env_var_loading(self):
+        os.environ[
+            'PJTOOLS_DUMMY_TEST_DATABASE_URL'] = 'mysql://user:pass@localhost/dbname'
+        config = PyConfigurator.fromfile('tests/data/dummy_config.py')
+        self.assertEqual(config.database_url,
+                         'mysql://user:pass@localhost/dbname')
+        del os.environ['PJTOOLS_DUMMY_TEST_DATABASE_URL']

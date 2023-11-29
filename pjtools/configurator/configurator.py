@@ -54,6 +54,10 @@ class JSONConfigurator(BaseConfigurator):
         with open(filepath, 'r') as f:
             config_dict = json.load(f)
 
+        config_dict = {
+            k: BaseConfigurator._resolve_env_vars(v)
+            for k, v in config_dict.items()
+        }
         return config_dict
 
 
@@ -160,6 +164,10 @@ class PyConfigurator(BaseConfigurator):
                 attribute = getattr(config_module, attribute_name)
                 config_dict[attribute_name] = attribute
 
+        config_dict = {
+            k: PyConfigurator._resolve_env_vars(v)
+            for k, v in config_dict.items()
+        }
         return config_dict, base_files
 
 
@@ -207,6 +215,10 @@ class YAMLConfigurator(BaseConfigurator):
         with open(filepath, 'r') as f:
             config_dict = yaml.safe_load(f)
 
+        config_dict = {
+            k: BaseConfigurator._resolve_env_vars(v)
+            for k, v in config_dict.items()
+        }
         return config_dict
 
 
