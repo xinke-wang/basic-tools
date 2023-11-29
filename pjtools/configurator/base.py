@@ -1,3 +1,4 @@
+import os
 from typing import Any, Dict, Type, Union
 
 from .dumper import DUMPER_REGISTRY
@@ -94,6 +95,26 @@ class BaseConfigurator:
             else:
                 self.__dict__[key] = value
 
+    @staticmethod
+    def _resolve_env_vars(value):
+        """Resolves environment variables in the given value. If the value is a
+        string and starts with 'env:', it is treated as an environment variable
+        name. The method retrieves the corresponding value from the environment
+        variables and returns it. If the environment variable is not found,
+        None is returned.
+
+        Args:
+            value (str or any): The value to resolve.
+
+        Returns:
+            The resolved value if it is an environment variable, otherwise the
+            original value.
+        """
+        if isinstance(value, str) and value.startswith('env:'):
+            env_var = value.split(':', 1)[1]
+            return os.environ.get(env_var, None)
+        return value
+
     def _load_from_dict(self, config_dict: Dict[str, Any]) -> None:
         """Load attributes from a dictionary.
 
@@ -101,10 +122,11 @@ class BaseConfigurator:
             config_dict: Dictionary containing configuration keys and values.
         """
         for key, value in config_dict.items():
-            if isinstance(value, dict):
-                self.__dict__[key] = BaseConfigurator(value)
+            resolved_value = self._resolve_env_vars(value)
+            if isinstance(resolved_value, dict):
+                self.__dict__[key] = BaseConfigurator(resolved_value)
             else:
-                self.__dict__[key] = value
+                self.__dict__[key] = resolved_value
 
     def __getitem__(self, key: str) -> Any:
         """Get an attribute using dict-style key access.

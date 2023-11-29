@@ -1,3 +1,4 @@
+import os
 import tempfile
 import unittest
 
@@ -44,3 +45,9 @@ class TestYAMLConfigurator(unittest.TestCase):
             self.config.dumpfile(tmp_path, format='yaml')
             loaded_config = YAMLConfigurator.fromfile(tmp_path)
             self.assertEqual(loaded_config.to_dict(), self.config.to_dict())
+
+    def test_env_var_loading(self):
+        os.environ['PJTOOLS_DUMMY_TEST_DATABASE_URL'] = '127.0.0.1'
+        config = YAMLConfigurator.fromfile('tests/data/dummy_config.json')
+        self.assertEqual(config.database.url, '127.0.0.1')
+        del os.environ['PJTOOLS_DUMMY_TEST_DATABASE_URL']
