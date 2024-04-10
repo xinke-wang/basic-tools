@@ -1,5 +1,3 @@
-# basic-tools
-
 # Project Tools
 
 **Project Tools** simplifies the process of building and configuring machine learning projects.
